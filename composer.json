@@ -9,7 +9,10 @@
         "laravel/framework": "5.4.*",
         "laravel/tinker": "~1.0",
         "symfony/css-selector": "^3.3",
-        "symfony/dom-crawler": "^3.3"
+        "symfony/dom-crawler": "^3.3",
+        "aws/aws-sdk-php": "~3.0",
+        "pda/pheanstalk": "~3.0",
+        "predis/predis": "~1.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

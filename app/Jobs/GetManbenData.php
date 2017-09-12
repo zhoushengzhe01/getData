@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Manben;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -36,11 +37,10 @@ class GetManbenData implements ShouldQueue
      */
     public function handle()
     {
-        file_get_contents('http://www.manben.com/');
-        file_get_contents('https://www.baidu.com');
-        file_get_contents('https://www.baidu.com');
-        file_get_contents('https://www.baidu.com');
-        file_get_contents('https://www.baidu.com');
+     
+        Log::error('send email to user: zhoushengzhe');
+        
+        // file_get_contents('https://www.baidu.com');
 
         //Manben::where('id', '=' , 1)->delete();
 
