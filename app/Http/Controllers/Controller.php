@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
+    
     //CURL获取
     public static function getCurl($url, $source='')
     {
@@ -24,9 +25,12 @@ class Controller extends BaseController
         curl_close ($ch);
         return $output;
     }
+
+
     //CURL提交
-    public function postCurl($url, $date,  $source='')
+    public static function postCurl($url, $date,  $source='')
     {
+        die;
         //初始化CURL
         $ch = curl_init();
         //请求地址
@@ -44,13 +48,28 @@ class Controller extends BaseController
         curl_close($ch);
         return $output;
     }
+
+
     //图片下载
-    public static function downloadImage($url, $path)
+    public static function downloadImage($url)
     {
-        
-        // $downloaded_file = fopen($save_to, 'w');
-        // fwrite($downloaded_file, $file_content);
-        // fclose($downloaded_file);
+        $path = 'download/'.date('Y').'/'.date('m').'/'.date('d').'/';
+
+        if(!is_dir('public/'.$path))
+        {
+            mkdir(iconv("UTF-8", "GBK", 'public/'.$path),0777,true);
+        }
+
+        $Con = self::getCurl($url);
+
+        preg_match("#.[a-zA-Z]+$#",$url, $matches);
+
+        $image_name = md5(microtime()).$matches[0];
+
+        file_put_contents('public/'.$path.$image_name , $Con);
+
+        return $path.$image_name;
+
     }
 
 }

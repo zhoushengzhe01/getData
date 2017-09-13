@@ -12,7 +12,7 @@ class getManben extends Command
      *
      * @var string
      */
-    protected $signature = 'get:manben';
+    protected $signature = 'manben';
 
     /**
      * The console command description.
@@ -38,7 +38,22 @@ class getManben extends Command
      */
     public function handle()
     {
-        ManbenController::get();
-        //new Crawler('<html></html>');
+
+        $type = $this->ask("input type ? \n \t data : Get manben data \n \t user : Get user data ");
+
+        if($type=='data')
+        {
+            ManbenController::getData();
+        }
+        
+        if($type=='user')
+        {
+            ManbenController::getUser();
+        }
+
+        //echo $userId = $this->argument('type');
+        //获取漫画
+        //
+
     }
 }
