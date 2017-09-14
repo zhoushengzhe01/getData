@@ -4,10 +4,7 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Cartoon extends Model
+class CartoonsImage extends Model
 {
-    protected $table = 'cartoons';
-
     //protected $connection = 'mysql_data';
-    
 }

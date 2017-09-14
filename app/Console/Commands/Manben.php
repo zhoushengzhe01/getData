@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Http\Controllers\ManbenController;
 use Illuminate\Console\Command;
 
-class getManben extends Command
+class Manben extends Command
 {
     /**
      * The name and signature of the console command.
@@ -38,22 +38,35 @@ class getManben extends Command
      */
     public function handle()
     {
+        $message = "Please enter the data you want ? \n\n";
 
-        $type = $this->ask("input type ? \n \t data : Get manben data \n \t user : Get user data ");
+        $message .= "\t book: Get comic data. \n\n";
 
-        if($type=='data')
-        {
-            ManbenController::getData();
-        }
+        $message .= "\t comment: Get comment data. \n\n";
         
-        if($type=='user')
+        $message .= "\t user: User system acquisition. \n\n";
+        
+
+        $type = $this->ask($message);
+
+        //Get comic data.
+        if($type=="book")
         {
-            ManbenController::getUser();
+            ManbenController::getBookData();
         }
 
-        //echo $userId = $this->argument('type');
-        //获取漫画
-        //
+        //Get comment data.
+        if($type=="comment")
+        {
+            ManbenController::getCommentData();
+        }
+
+        //User system acquisition.
+        if($type=="user")
+        {
+            ManbenController::getUserData();
+        }
+
 
     }
 }

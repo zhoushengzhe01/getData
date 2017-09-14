@@ -51,7 +51,7 @@ class Controller extends BaseController
 
 
     //图片下载
-    public static function downloadImage($url)
+    public static function downloadImage($url, $source)
     {
         $path = 'download/'.date('Y').'/'.date('m').'/'.date('d').'/';
 
@@ -60,7 +60,7 @@ class Controller extends BaseController
             mkdir(iconv("UTF-8", "GBK", 'public/'.$path),0777,true);
         }
 
-        $Con = self::getCurl($url);
+        $Con = self::getCurl($url, $source);
 
         preg_match("#.[a-zA-Z]+$#",$url, $matches);
 
