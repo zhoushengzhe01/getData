@@ -43,6 +43,8 @@ class Manben extends Command
         $message .= "\t book: Get comic data. \n\n";
 
         $message .= "\t comment: Get comment data. \n\n";
+
+        $message .= "\t update: Updating manga data. \n\n";
         
         $message .= "\t user: User system acquisition. \n\n";
         
@@ -60,6 +62,13 @@ class Manben extends Command
         {
             ManbenController::getCommentData();
         }
+
+        if($type=='update')
+        {
+            ManbenController::getUpdateData();
+        }
+
+        //Updating manga data
 
         //User system acquisition.
         if($type=="user")

@@ -51,9 +51,19 @@ class Controller extends BaseController
 
 
     //图片下载
-    public static function downloadImage($url, $source)
+    public static function downloadImage($url, $source, $path1='', $path2='')
     {
-        $path = 'download/'.date('Y').'/'.date('m').'/'.date('d').'/';
+        $path = 'download/2016/';
+
+        if($path1)
+        {
+            $path .= $path1.'/';
+        }
+        
+        if($path2)
+        {
+            $path .= $path2.'/';
+        }
 
         if(!is_dir('public/'.$path))
         {
@@ -69,6 +79,21 @@ class Controller extends BaseController
         file_put_contents('public/'.$path.$image_name , $Con);
 
         return $path.$image_name;
+
+    }
+
+    //删除图片
+    public static function deleteImage($path)
+    {
+        $path = "public/".$path;
+ 
+        if(is_file($path))
+        {
+            //存在删除
+            unlink($path);
+        }
+        
+        return true;
 
     }
 
