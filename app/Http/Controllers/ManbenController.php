@@ -55,7 +55,7 @@ class ManbenController extends Controller
 
             //设置同步完成
             Cartoon::where('cartoon_id', '=', $cartoon_id)->update(['state'=>2]);
-          
+            
             echo date("Y-m-d H:i:s").": Ready for the next one\n";
 
             sleep(2);
@@ -204,7 +204,7 @@ class ManbenController extends Controller
             $cartoonsCatalog->is_delete = 0;
             $cartoonsCatalog->save();
 
-            $cartoonsCatalog = Cartoon::where('cartoon_id', '=', self::$cartoon_id)->where('catalog_id', '=', self::$catalog_id)->first();
+            $cartoonsCatalog = CartoonsCatalog::where('cartoon_id', '=', self::$cartoon_id)->where('catalog_id', '=', self::$catalog_id)->first();
             self::$_catalog_id = $cartoonsCatalog['id'];
 
         }
