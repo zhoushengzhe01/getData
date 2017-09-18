@@ -12,6 +12,8 @@ use App\Model\UserManbenStep;
 use App\Model\Cartoon;
 use App\Model\CartoonsCatalog;
 use App\Model\CartoonsImage;
+use App\Model\CartoonsComment;
+use App\Model\CartoonsUser;
 
 
 class ManbenController extends Controller
@@ -26,6 +28,7 @@ class ManbenController extends Controller
     protected static $catalog_id;
 
     protected static $_catalog_id;
+
 
     public static function getBookData()
     {
@@ -162,7 +165,6 @@ class ManbenController extends Controller
 
         echo date("Y-m-d H:i:s").": \tA cartoon finished\n";
 
-
         //返回标识ID
         return self::$cartoon_id;
 
@@ -284,10 +286,157 @@ class ManbenController extends Controller
     }
 
 
+    //获取评论 + 评论用户
+    public static function getCommentData()
+    {
+        //查找漫画
+        $cartoon = Cartoon::where('state', '=', '2')->orderBy('updated_at', 'desc')->first();
 
+        if(!empty($cartoon))
+        {
+            self::$cartoon_id = $cartoon['cartoon_id'];
+            
+            //Cartoon::where('id', '=', $cartoon['id'])->update(['state'=>5]);
 
+            //获取多少页
+            $crawler = new Crawler(self::getCurl($cartoon['source']));
+            
+            $count = $crawler->filter('.comment .pager .pageBtn')->count();
+            $count = $crawler->filter('.comment .pager .pageBtn')->eq($count-2)->text();
 
+            for($i=$count ; $i>0 ; $i--)
+            {
+                if($i==1)
+                {
+                    $url = $cartoon['source'];
+                }
+                else
+                {
+                    $url = $cartoon['source']."p".$i;
+                }
+
+                self::getCommentItem($url);
+            }
+
+            //结束
+            Cartoon::where('id', '=', $cartoon['id'])->update(['state'=>5]);
+
+        }
     
+    }
+    
+    //遍历评论
+    public static function getCommentItem($url)
+    {
+
+        $crawler = new Crawler(self::getCurl($url));
+
+        $count = $crawler->filter('.commentInfo .list .item')->count();
+        
+
+        for($i=$count ; $i>0 ; $i--)
+        {
+
+            $itemComment = $crawler->filter('.commentInfo .list .item')->eq($i-1);
+
+            $avatar = $itemComment->filter('.avatar')->attr('src');
+            $name = $itemComment->filter('.info span')->eq(0)->text();
+            
+            //时间
+            $time = trim($itemComment->filter('.info span')->eq(1)->text());
+            //评论
+            $content = trim($itemComment->filter('.content')->text());
+            //点赞数量
+            $support = str_replace(")","", str_replace("(","", $itemComment->filter('.bottom span span')->text()));
+            //点赞数量
+            $support = (intval($support) + rand(1, 5)) * rand(1, 20);
+            
+            $user = self::getUserId($name, $avatar);
+           
+            //同一个漫画  同一个人 内容一样
+            $Comment = CartoonsComment::where('cartoon_id', '=', self::$cartoon_id)
+                    ->where('user_id', '=', $user['id'])
+                    ->where('content', '=', $content)
+                    ->first();
+              
+            if(empty($Comment))
+            {
+                
+                $cartoonsComment = new CartoonsComment();
+
+                    $cartoonsComment->cartoon_id = self::$cartoon_id;
+                    $cartoonsComment->user_id = $user['id'];
+                    $cartoonsComment->user_name = $user['name'];
+                    $cartoonsComment->user_head = $user['header'];
+                    $cartoonsComment->support = $support;
+                    $cartoonsComment->reply = 0;
+                    $cartoonsComment->content = $content;
+                    $cartoonsComment->save();
+
+            }
+
+        }
+
+    }
+
+    public static function getUserId($name, $avatar)
+    {
+        $name = str_replace("漫本", "桔子会员", trim($name));
+
+        //查找是否有此用户
+        $cartoonsUser = CartoonsUser::where('name','=',$name)->first();
+
+        if(empty($cartoonsUser))
+        {
+          
+            //判断用户名是否邮箱
+            if(preg_match('/\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/',$name))
+            {  
+                $email = $name;
+            }
+            else
+            {
+                $email = "";
+            }
+
+            //判断是否手机号
+            if(preg_match("/^1[34578]{1}\d{9}$/",$name))
+            {  
+                $mobile = $name;
+            }
+            else
+            {  
+                $mobile = "";
+            }
+
+            $password = md5(rand(100000, 999999));
+            
+            $header = self::downloadImage($avatar, '', 'header');
+   
+            $user = new CartoonsUser();
+
+                $user->name = $name;
+                $user->password = $password;
+                $user->header = $header;
+                $user->email = $email;
+                $user->mobile = $mobile;
+                $user->login_at = date("Y-m-d H:i:s");
+
+                $user->save();
+
+            $cartoonsUser = CartoonsUser::where('name','=',$name)->first();
+            
+        }
+   
+        return $cartoonsUser;
+
+    }
+
+
+
+
+
+
     //获取用户数据
     public static function getUser()
     {

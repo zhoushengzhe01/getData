@@ -74,6 +74,11 @@ class Controller extends BaseController
 
         preg_match("#.[a-zA-Z]+$#",$url, $matches);
 
+        if(empty($matches[0]))
+        {
+            return $url;
+        }
+
         $image_name = md5(microtime()).$matches[0];
 
         file_put_contents('public/'.$path.$image_name , $Con);
