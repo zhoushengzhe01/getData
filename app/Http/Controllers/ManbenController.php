@@ -14,6 +14,8 @@ use App\Model\CartoonsCatalog;
 use App\Model\CartoonsImage;
 use App\Model\CartoonsComment;
 use App\Model\CartoonsUser;
+use App\Model\CartoonsCategory;
+use App\Model\CartoonsCategoryCartoon;
 
 
 class ManbenController extends Controller
@@ -31,23 +33,19 @@ class ManbenController extends Controller
 
 
     public static function getBookData()
-    {
-        
+    {   
         start:
   
         $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (中国标准时间)';
 
-        $pageindex = 84;
-
-        //echo md5(microtime());
+        $pageindex = 85;
 
         $url = self::$domain . "/mh-updated/pagerdata.ashx?t=8&pageindex=".$pageindex."&sc=1&d=".$standard_time;
         
         $result = json_decode(self::getCurl($url),true);
-        
     
         //倒着过来
-        for( $i=count($result) ; $i>0 ; $i-- )
+        for($i=count($result) ; $i>0 ; $i--)
         {
             $data = $result[$i-1];
 
@@ -59,9 +57,12 @@ class ManbenController extends Controller
             echo date("Y-m-d H:i:s").": Ready for the next one\n";
 
             sleep(2);
+
         }
 
-        // goto start;
+        //$pageindex--;
+
+        //goto start;
     }
     
     //获得详细信息数据
@@ -84,7 +85,7 @@ class ManbenController extends Controller
 
             $user_id = 1;
             
-            $area_id = '';
+            $area_id = 3;   //选默认三
             
             $letter = implode('',pinyin($title));
     
@@ -101,6 +102,8 @@ class ManbenController extends Controller
             $view = trim(str_replace("阅读人次：","", $crawler->filter('.comicInfo .info .ib')->eq(5)->text()));
     
             $collect = trim(str_replace("收藏数：","", $crawler->filter('.comicInfo .info .ib')->eq(4)->text()));
+
+            $category = trim(str_replace("类  别：","", $crawler->filter('.comicInfo .info .ib')->eq(7)->text()));
     
             $intro = trim($crawler->filter('.comicInfo .content')->text());
     
@@ -126,6 +129,8 @@ class ManbenController extends Controller
             $cartoon = Cartoon::where('cartoon_id', '=', self::$cartoon_id)->first();
             self::$_cartoon_id = $cartoon['id'];
 
+            //分类设置
+            self::updateCategory(trim($category));
 
         }
         else
@@ -154,7 +159,6 @@ class ManbenController extends Controller
             $title = $item->text();
 
             //查找数据库是否存在
-            
             $catalog_id = self::getCartoonsCatalog($cid, $title);
             
             //处理状态完成
@@ -167,6 +171,39 @@ class ManbenController extends Controller
 
         //返回标识ID
         return self::$cartoon_id;
+
+    }
+
+    //类别处理
+    public static function updateCategory($category)
+    {
+
+        $cartoonsCategory = CartoonsCategory::orderBy('sort', 'asc')->get();
+
+
+        foreach(explode('/',$category) as $v)
+        {
+            foreach($cartoonsCategory as $key=>$val)
+            {
+                if(strpos($val['keyword'], $v) !== false)
+                {
+                    //查看是否已经处理过
+                    $count = CartoonsCategoryCartoon::where('cartoon_id', '=', self::$cartoon_id)
+                            ->where('category_id', '=', $val['id'])
+                            ->count();
+
+                    if($count<1)
+                    {
+                        $categoryCartoon = new CartoonsCategoryCartoon();
+
+                        $categoryCartoon->cartoon_id = self::$cartoon_id;
+                        $categoryCartoon->category_id = $val['id'];
+                        $categoryCartoon->save();
+                    }
+                }
+            }
+        }
+
 
     }
 
@@ -290,7 +327,7 @@ class ManbenController extends Controller
     public static function getCommentData()
     {
         //查找漫画
-        $cartoon = Cartoon::where('state', '=', '2')->orderBy('updated_at', 'desc')->first();
+        $cartoon = Cartoon::where('state', '=', '2')->orderBy('updated_at', 'asc')->first();
 
         if(!empty($cartoon))
         {
@@ -437,49 +474,5 @@ class ManbenController extends Controller
 
 
 
-    //获取用户数据
-    public static function getUser()
-    {
-        //开始
-        start:
-
-        $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (中国标准时间)';
-
-        $id = 1;
-
-        //查找区域
-        $manbenStep = UserManbenStep::find($id);
-
-        if( $manbenStep->current <= $manbenStep->stop )
-        {
-
-            $url = 'http://www.manben.com/checkname.ashx?d='.$standard_time.'&txt_reg_email='.$manbenStep->current.'@qq.com';
-
-            $result = json_decode(self::getCurl($url), true);
-
-            if($result['result']=='error')
-            {
-                echo date('Y-m-d H:i:s').$manbenStep->current.'@qq.com';
-                echo "\n";
-
-                //邮箱存在存起来
-                $userManben = new UserManben;
-                $userManben->email = $manbenStep->current.'@qq.com';
-                $userManben->save();
-                
-            }
-
-            UserManbenStep::where('id', '=', $id)->increment('current');
-            
-
-            echo date('Y-m-d H:i:s').$result['result']."\n";
-
-            usleep(100);
-
-            goto start;
-
-        }
-
-        
-    }
+    
 }

@@ -30,7 +30,6 @@ class Controller extends BaseController
     //CURL提交
     public static function postCurl($url, $date,  $source='')
     {
-        die;
         //初始化CURL
         $ch = curl_init();
         //请求地址
@@ -49,38 +48,63 @@ class Controller extends BaseController
         return $output;
     }
 
+    //curl qq号验证
+    public static function postCurlQQ($url, $date,  $source='')
+    {
+        //初始化CURL
+        $ch = curl_init();
+        //请求地址
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        //POST请求
+        curl_setopt($ch, CURLOPT_POST, 1);
+        //来源地址设置
+        curl_setopt ($ch,CURLOPT_REFERER, $source);
+        //提交参数
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $date);
+        
+        curl_setopt($ch, CURLOPT_COOKIE, 'pgv_pvid=4095856828; RK=PV1ztOYeNE; pt2gguin=o0793616951; ptcz=42d33f9ad681220bec1c85abf8d85a7b92e8344a9a949f5dc4d16172fb70e453; itkn=2062170726; uin=o793616951; skey=Z1pvPHCQgX');
+        //结果
+        $output = curl_exec($ch);
+        //释放CURL
+        curl_close($ch);
+        return $output;
+    }
+
 
     //图片下载
     public static function downloadImage($url, $source, $path1='', $path2='')
     {
         $path = 'download/2016/';
 
-        if($path1)
-        {
-            $path .= $path1.'/';
-        }
-        
-        if($path2)
-        {
-            $path .= $path2.'/';
-        }
+        //默认图片
+        $default = 'download/header/header.jpg';
 
+        if($path1)
+            $path .= $path1.'/';
+
+        if($path2)
+            $path .= $path2.'/';
+
+        //没有目录创建
         if(!is_dir('public/'.$path))
         {
             mkdir(iconv("UTF-8", "GBK", 'public/'.$path),0777,true);
         }
-
-        $Con = self::getCurl($url, $source);
-
-        preg_match("#.[a-zA-Z]+$#",$url, $matches);
-
-        if(empty($matches[0]))
+        //匹配文件名
+        preg_match("#[0-9a-zA-Z]+.[a-zA-Z]+$#",$url, $file_name);
+        if(empty($file_name[0]) || $file_name[0]=='toux3.jpg')
         {
-            return $url;
+            return $default;
         }
 
+        //匹配后缀
+        preg_match("#.[a-zA-Z]+$#",$file_name[0], $matches);
+        //图片名称
         $image_name = md5(microtime()).$matches[0];
 
+        //读取 保存
+        $Con = self::getCurl($url, $source);
         file_put_contents('public/'.$path.$image_name , $Con);
 
         return $path.$image_name;
