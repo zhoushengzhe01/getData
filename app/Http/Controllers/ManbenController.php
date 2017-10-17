@@ -35,15 +35,16 @@ class ManbenController extends Controller
     public static function getBookData()
     {   
         start:
-  
+
         $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (中国标准时间)';
 
-        $pageindex = 85;
+        $pageindex = 89;
 
         $url = self::$domain . "/mh-updated/pagerdata.ashx?t=8&pageindex=".$pageindex."&sc=1&d=".$standard_time;
         
         $result = json_decode(self::getCurl($url),true);
-    
+
+
         //倒着过来
         for($i=count($result) ; $i>0 ; $i--)
         {
@@ -53,18 +54,15 @@ class ManbenController extends Controller
 
             //设置同步完成
             Cartoon::where('cartoon_id', '=', $cartoon_id)->update(['state'=>2]);
-            
+
             echo date("Y-m-d H:i:s").": Ready for the next one\n";
 
             sleep(2);
-
         }
-
         //$pageindex--;
-
         //goto start;
     }
-    
+
     //获得详细信息数据
     public static function getCartoon($data)
     {
@@ -88,9 +86,9 @@ class ManbenController extends Controller
             $area_id = 3;   //选默认三
             
             $letter = implode('',pinyin($title));
-    
+
             $image = self::downloadImage($crawler->filter('.comicInfo .img img')->attr('src'), $url, 'cover');
-            
+
             $status = trim(str_replace("状  态：", "", $crawler->filter('.comicInfo .info .ib')->eq(9)->text()))=='连载中' ? 1 : 2;
             
             $energy = trim(str_replace("万","", str_replace("漫画战力：","", $crawler->filter('.comicInfo .info .ib')->eq(6)->text())));
@@ -104,9 +102,9 @@ class ManbenController extends Controller
             $collect = trim(str_replace("收藏数：","", $crawler->filter('.comicInfo .info .ib')->eq(4)->text()));
 
             $category = trim(str_replace("类  别：","", $crawler->filter('.comicInfo .info .ib')->eq(7)->text()));
-    
+
             $intro = trim($crawler->filter('.comicInfo .content')->text());
-    
+
             //插入数据
             $cartoon = new Cartoon;
             $cartoon->cartoon_id = self::$cartoon_id;
@@ -146,25 +144,27 @@ class ManbenController extends Controller
 
         }
 
-        //获取多少章节
-        $catalogCount = $crawler->filter('#chapterlistload .ib')->count();
-
-        //章节获取
-        for($i=$catalogCount ; $i>0 ; $i--)
+        //章节获取 1:话  2:卷  3:番外
+        for($n=0 ; $n<3 ; $n++)
         {
-            $item = $crawler->filter('#chapterlistload .ib')->eq($i-1);
-
-            $cid = str_replace("/","", str_replace("m","", $item->attr('href')));
+            $catalogCount = $crawler->filter('#chapterlistload .list')->eq($n)->filter('.ib')->count();
            
-            $title = $item->text();
-
-            //查找数据库是否存在
-            $catalog_id = self::getCartoonsCatalog($cid, $title);
-            
-            //处理状态完成
-            CartoonsCatalog::where('catalog_id', '=', $catalog_id)->update(['state'=>2]);
-
-            echo date("Y-m-d H:i:s").": \tOne chapter is complete\n";
+            for($i=$catalogCount ; $i>0 ; $i--)
+            {
+                $item = $crawler->filter('#chapterlistload .list')->eq($n)->filter('.ib')->eq($i-1);
+    
+                $cid = str_replace("/","", str_replace("m","", $item->attr('href')));
+                
+                $title = $item->text();
+    
+                //查找数据库是否存在
+                $catalog_id = self::getCartoonsCatalog($cid, $n+1, $title);
+                
+                //处理状态完成
+                CartoonsCatalog::where('catalog_id', '=', $catalog_id)->update(['state'=>2]);
+    
+                echo date("Y-m-d H:i:s").": \tOne chapter is complete\n";
+            }
         }
 
         echo date("Y-m-d H:i:s").": \tA cartoon finished\n";
@@ -208,7 +208,7 @@ class ManbenController extends Controller
     }
 
     //获取章节图片
-    public static function getCartoonsCatalog($cid, $title)
+    public static function getCartoonsCatalog($cid, $type, $title)
     {   
         $href = self::$domain . "/m".$cid."/";
 
@@ -277,46 +277,69 @@ class ManbenController extends Controller
 
         $imageCount = $catalog->filter('.pagelist a')->count();
 
-        //获取图片
-        for($i=$imageCount ; $i>0 ; $i--)
+        if($imageCount==0)
         {
-            $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (CST)';
-
-            $url = "http://www.manben.com/imageshow.ashx?d=".$standard_time."&cid=".$cid."&page=".($i)."&showtype=1&ispre=1";
-
-            $result = json_decode(str_replace(";","", str_replace("var chapterimage=","", self::getCurl($url))),true);
+            //大图模式
             
-       
-            $images = $result['Images'];
-
-            $imagePix = $result['ImagePix'];
-
-            //两个两个图片现在
-            foreach($images as $k=>$v)
-            {
-                $arr = parse_url($v);
             
-                $imagePath = $imagePix.$arr["path"];
-                
-                $path = self::downloadImage($imagePath, $href, self::$_cartoon_id, self::$_catalog_id);
+            //一张图片模式
+            
 
-                $cartoonsImage = new CartoonsImage;
+            //两张图片模式
+            $reg = "/',[0-9]+,[0-9]+,'[0-9a-zA-Z]+\|[/s]?\|[0-9a-zA-Z\|\_]+/";
 
-                    $cartoonsImage->cartoon_id = self::$cartoon_id;
-                    $cartoonsImage->catalog_id = self::$catalog_id;
-                    $cartoonsImage->path = $path;
-                    $cartoonsImage->size = '';
-                    $cartoonsImage->height = '';
-                    $cartoonsImage->width = '';
-                    $cartoonsImage->sort = 50;
-                    $cartoonsImage->is_delete = 0;
-                    $cartoonsImage->source = $imagePath;
-                    $cartoonsImage->save();
-                
-                    echo date("Y-m-d H:i:s").": ".$path."\tOne picture is complete\n";
-            }
+            //三张图片模式
+            $reg = "/',[0-9]+,[0-9]+,'[0-9a-zA-Z]+\|[/s]?\|[0-9a-zA-Z\|\_]+/";
 
+            //四张图片模式
+            $reg = "/',[0-9]+,[0-9]+,'[0-9a-zA-Z]+\|[/s]?\|[0-9a-zA-Z\|\_]+/";
+
+
+            die('没有图片');
         }
+        else
+        {
+            //获取图片
+            for($i=$imageCount ; $i>0 ; $i--)
+            {
+                $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (CST)';
+
+                $url = "http://www.manben.com/imageshow.ashx?d=".$standard_time."&cid=".$cid."&page=".($i)."&showtype=1&ispre=1";
+
+                $result = json_decode(str_replace(";","", str_replace("var chapterimage=","", self::getCurl($url))),true);
+                
+        
+                $images = $result['Images'];
+
+                $imagePix = $result['ImagePix'];
+
+                //两个两个图片现在
+                foreach($images as $k=>$v)
+                {
+                    $arr = parse_url($v);
+                
+                    $imagePath = $imagePix.$arr["path"];
+                    
+                    $path = self::downloadImage($imagePath, $href, self::$_cartoon_id, self::$_catalog_id);
+
+                    $cartoonsImage = new CartoonsImage;
+
+                        $cartoonsImage->cartoon_id = self::$cartoon_id;
+                        $cartoonsImage->catalog_id = self::$catalog_id;
+                        $cartoonsImage->path = $path;
+                        $cartoonsImage->size = '';
+                        $cartoonsImage->height = '';
+                        $cartoonsImage->width = '';
+                        $cartoonsImage->sort = 50;
+                        $cartoonsImage->is_delete = 0;
+                        $cartoonsImage->source = $imagePath;
+                        $cartoonsImage->save();
+                    
+                        echo date("Y-m-d H:i:s").": ".$path."\tOne picture is complete\n";
+                }
+            }
+        }
+        
         //echo "catalog_id: ".self::$catalog_id."\n";
 
         return self::$catalog_id;

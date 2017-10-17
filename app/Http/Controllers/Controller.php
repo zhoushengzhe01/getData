@@ -62,8 +62,8 @@ class Controller extends BaseController
         curl_setopt ($ch,CURLOPT_REFERER, $source);
         //提交参数
         curl_setopt($ch, CURLOPT_POSTFIELDS, $date);
-        
-        curl_setopt($ch, CURLOPT_COOKIE, 'pgv_pvid=4095856828; RK=PV1ztOYeNE; pt2gguin=o0793616951; ptcz=42d33f9ad681220bec1c85abf8d85a7b92e8344a9a949f5dc4d16172fb70e453; itkn=2062170726; uin=o793616951; skey=Z1pvPHCQgX');
+
+        curl_setopt($ch, CURLOPT_COOKIE, 'pt2gguin=o2712143540; RK=LDH6rGO6ss; ptcz=06093d145cde79ea99f23fd5b8f294d4d30918d02c5476ca64641789eea15587; _qpsvr_localtk=tk553; pgv_pvid=280793616; uin=o2712143540; skey=Zplfkj8Q3K; itkn=2062170726');
         //结果
         $output = curl_exec($ch);
         //释放CURL

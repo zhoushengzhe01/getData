@@ -17,14 +17,11 @@ class TenxunController extends Controller
     public static function getQQData()
     {
 
-        //die('okokokok');
-        
         $url = "http://cgi.find.qq.com/qqfind/buddy/search_v3";
 
-        $params = "num=20&page=0&sessionid=0&keyword=793616951&agerg=0&sex=0&firston=0&video=0&country=0&province=0&city=0&district=0&hcountry=0&hprovince=0&hcity=0&hdistrict=0&online=0&ldw=87384993";
+        $params = "num=20&page=0&sessionid=0&keyword=100046&agerg=0&sex=0&firston=0&video=0&country=0&province=0&city=0&district=0&hcountry=0&hprovince=0&hcity=0&hdistrict=0&online=0&ldw=392047444";
 
         $res = self::postCurlQQ($url, $params);
-
 
 
         print_r(json_decode($res, true));
