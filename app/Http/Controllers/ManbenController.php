@@ -44,7 +44,7 @@ class ManbenController extends Controller
         
         $result = json_decode(self::getCurl($url),true);
 
-
+        
         //倒着过来
         for($i=count($result) ; $i>0 ; $i--)
         {
@@ -236,7 +236,7 @@ class ManbenController extends Controller
             $cartoonsCatalog->title = $title;
             $cartoonsCatalog->subtitle = $subtitle;
             $cartoonsCatalog->sort = 50;
-            $cartoonsCatalog->type = 1;
+            $cartoonsCatalog->type = $type;
             $cartoonsCatalog->source = $href;
             $cartoonsCatalog->is_delete = 0;
             $cartoonsCatalog->save();
@@ -272,28 +272,74 @@ class ManbenController extends Controller
             }
         }
 
-
         $catalog = new Crawler(self::getCurl($href));
 
         $imageCount = $catalog->filter('.pagelist a')->count();
-
+        
         if($imageCount==0)
         {
-            //大图模式
+            $arrow = ['0'=>'0','1'=>'1','2'=>'2','3'=>'3','4'=>'4','5'=>'5','6'=>'6','7'=>'7','8'=>'8','9'=>'9','a'=>'10','b'=>'11','c'=>'12','d'=>'13','e'=>'14','f'=>'15','g'=>'16','h'=>'17','i'=>'18','j'=>'19','k'=>'20','l'=>'21','m'=>'22','n'=>'23','o'=>'24','p'=>'25','q'=>'26','r'=>'27','s'=>'28','t'=>'29','u'=>'30','v'=>'31','w'=>'32','x'=>'33','y'=>'34','z'=>'35'];
+
+            $string = $catalog->filter('script')->eq(2)->text();
             
+            preg_match_all("#[0-9a-z]+://[0-9a-z\-\.\/]+\?#", $string, $matches);
+            $keyArr = $matches[0];
+
+            preg_match("#[0-9a-zA-Z]+\|[/s]?\|[0-9a-zA-Z\|\_]+#", $string, $matches);
+            $imagePath = explode('|' , $matches[0]);
+
+            $images = [];
+
+            foreach($keyArr as $val)
+            {
+                preg_match_all("#[0-9a-z\:\/\.\-]#", $val, $matches);
+                $letterArr = $matches[0];
+
+                $image = '';
+                foreach($letterArr as $v)
+                {
+                    if(preg_match("/^[0-9a-z]$/",$v))
+                    {
+                        $image .= $imagePath[$arrow[$v]];
+                    }
+                    else
+                    {
+                        $image .= $v;
+                    }
+                }
+
+                $images[] = $image;
+            }
+
+            //下载并插入图片
+            foreach($images as $k=>$v)
+            {
+                $arr = parse_url($v);
             
-            //一张图片模式
-            
+                $imagePath = $v;
+                
+                $path = self::downloadImage($imagePath, $href, self::$_cartoon_id, self::$_catalog_id);
 
-            //两张图片模式
-            $reg = "/',[0-9]+,[0-9]+,'[0-9a-zA-Z]+\|[/s]?\|[0-9a-zA-Z\|\_]+/";
+                $imageInfo = getimagesize(public_path($path));
+                
+                $cartoonsImage = new CartoonsImage;
 
-            //三张图片模式
-            $reg = "/',[0-9]+,[0-9]+,'[0-9a-zA-Z]+\|[/s]?\|[0-9a-zA-Z\|\_]+/";
+                    $cartoonsImage->cartoon_id = self::$cartoon_id;
+                    $cartoonsImage->catalog_id = self::$catalog_id;
+                    $cartoonsImage->path = $path;
+                    $cartoonsImage->size = filesize(public_path($path));
+                    $cartoonsImage->height = $imageInfo[1];
+                    $cartoonsImage->width = $imageInfo[0];
+                    $cartoonsImage->sort = 50;
+                    $cartoonsImage->is_delete = 0;
+                    $cartoonsImage->source = $imagePath;
+                    $cartoonsImage->save();
+                
+                    echo date("Y-m-d H:i:s").": ".$path."\tOne picture is complete\n";
+            }
 
-            //四张图片模式
-            $reg = "/',[0-9]+,[0-9]+,'[0-9a-zA-Z]+\|[/s]?\|[0-9a-zA-Z\|\_]+/";
-
+            //处理本章节阅读方式
+            CartoonsCatalog::where('catalog_id', '=', self::$catalog_id)->update(['read'=>2]);
 
             die('没有图片');
         }
@@ -322,14 +368,16 @@ class ManbenController extends Controller
                     
                     $path = self::downloadImage($imagePath, $href, self::$_cartoon_id, self::$_catalog_id);
 
+                    $imageInfo = getimagesize(public_path($path));
+
                     $cartoonsImage = new CartoonsImage;
 
                         $cartoonsImage->cartoon_id = self::$cartoon_id;
                         $cartoonsImage->catalog_id = self::$catalog_id;
                         $cartoonsImage->path = $path;
-                        $cartoonsImage->size = '';
-                        $cartoonsImage->height = '';
-                        $cartoonsImage->width = '';
+                        $cartoonsImage->size = filesize(public_path($path));
+                        $cartoonsImage->height = $imageInfo[1];
+                        $cartoonsImage->width = $imageInfo[0];
                         $cartoonsImage->sort = 50;
                         $cartoonsImage->is_delete = 0;
                         $cartoonsImage->source = $imagePath;
@@ -338,9 +386,12 @@ class ManbenController extends Controller
                         echo date("Y-m-d H:i:s").": ".$path."\tOne picture is complete\n";
                 }
             }
+
+            //处理本章节阅读方式
+            CartoonsCatalog::where('catalog_id', '=', self::$catalog_id)->update(['read'=>1]);
         }
-        
-        //echo "catalog_id: ".self::$catalog_id."\n";
+
+        echo "catalog_id: ".self::$catalog_id."\n";
 
         return self::$catalog_id;
     }
