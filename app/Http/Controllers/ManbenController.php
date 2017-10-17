@@ -38,7 +38,7 @@ class ManbenController extends Controller
 
         $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (中国标准时间)';
 
-        $pageindex = 89;
+        $pageindex = 87;
 
         $url = self::$domain . "/mh-updated/pagerdata.ashx?t=8&pageindex=".$pageindex."&sc=1&d=".$standard_time;
         
@@ -341,7 +341,6 @@ class ManbenController extends Controller
             //处理本章节阅读方式
             CartoonsCatalog::where('catalog_id', '=', self::$catalog_id)->update(['read'=>2]);
 
-            die('没有图片');
         }
         else
         {
