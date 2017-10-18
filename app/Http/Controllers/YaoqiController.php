@@ -18,7 +18,7 @@ use App\Model\CartoonsCategory;
 use App\Model\CartoonsCategoryCartoon;
 
 
-class ManbenController extends Controller
+class YaoqiController extends Controller
 {
 
     protected static $domain = 'http://www.manben.com';
