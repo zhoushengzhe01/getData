@@ -28,8 +28,9 @@ class Controller extends BaseController
 
 
     //CURL提交
-    public static function postCurl($url, $date,  $source='')
+    public static function postCurl($url, $data,  $source='')
     {
+
         //初始化CURL
         $ch = curl_init();
         //请求地址
@@ -40,7 +41,8 @@ class Controller extends BaseController
         //来源地址设置
         curl_setopt ($ch,CURLOPT_REFERER, $source);
         //提交参数
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $date);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        //curl_setopt($ch, CURLOPT_POSTFIELDS, $date);
         //结果
         $output = curl_exec($ch);
         //释放CURL

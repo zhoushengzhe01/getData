@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         'App\Console\Commands\Manben',
         'App\Console\Commands\Tenxun',
+        'App\Console\Commands\Yaoqi',
     ];
 
     /**

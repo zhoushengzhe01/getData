@@ -21,7 +21,7 @@ use App\Model\CartoonsCategoryCartoon;
 class YaoqiController extends Controller
 {
 
-    protected static $domain = 'http://www.manben.com';
+    protected static $domain = 'http://www.u17.com';
 
     protected static $cartoon_id;
 
@@ -36,19 +36,30 @@ class YaoqiController extends Controller
     {   
         start:
 
-        $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (中国标准时间)';
-
         $pageindex = 73;
 
-        $url = self::$domain . "/mh-updated/pagerdata.ashx?t=8&pageindex=".$pageindex."&sc=1&d=".$standard_time;
+        $url = self::$domain . "/comic/ajax.php?mod=comic_list&act=comic_list_new_fun&a=get_comic_list";
         
-        $result = json_decode(self::getCurl($url),true);
+        $data = [
+            'group_id'=>'no',
+            'theme_id'=>'no',
+            'is_vip'=>'no',
+            'accredit'=>'no',
+            'color'=>'no',
+            'comic_type'=>'no',
+            'series_status'=>'no',
+            'order'=>1,
+            'page_num'=>324,
+            'editor_level'=>'no',
+        ];
         
+        $result = json_decode(self::postCurl($url, ['data'=>$data]), true);
+        $result = $result['comic_list'];
+
         //倒着过来
         for($i=count($result) ; $i>0 ; $i--)
         {
             $data = $result[$i-1];
-
             $cartoon_id = self::getCartoon($data);
 
             //设置同步完成
@@ -65,13 +76,12 @@ class YaoqiController extends Controller
     //获得详细信息数据
     public static function getCartoon($data)
     {
- 
-        $url = self::$domain . $data['Url'];
+        $url = self::$domain . '/comic/'.$data['comic_id'].'.html';
 
         $crawler = new Crawler(self::getCurl($url));
 
         //获得标题
-        $title = $crawler->filter('.comicInfo .img img')->attr('title');
+        $title = $crawler->filter('.comic_info .left .coverBox .cover img')->attr('title');
 
         //进行验证 是否同步完成
         $cartoon = Cartoon::where('title', '=', $title)->first();
@@ -86,42 +96,42 @@ class YaoqiController extends Controller
             
             $letter = implode('',pinyin($title));
 
-            $image = self::downloadImage($crawler->filter('.comicInfo .img img')->attr('src'), $url, 'cover');
-
-            $status = trim(str_replace("状  态：", "", $crawler->filter('.comicInfo .info .ib')->eq(9)->text()))=='连载中' ? 1 : 2;
+            echo "\n图片：".$image = self::downloadImage($crawler->filter('.comic_info .left .coverBox .cover img')->attr('src'), $url, 'cover');
             
-            $energy = trim(str_replace("万","", str_replace("漫画战力：","", $crawler->filter('.comicInfo .info .ib')->eq(6)->text())));
+            echo "\n状态：".$status = trim($crawler->filter('.comic_info .left .info .line1 span')->eq(2)->text())=='连载中' ? 1 : 2;
             
-            $author = trim(str_replace("作  者：","", $crawler->filter('.comicInfo .info .ib')->eq(3)->text()));
+            echo "\n战斗力：".$energy = 0;
+            
+            echo "\n作者：".$author = trim($crawler->filter('.comic_info .right .info .name')->text());
     
             $source = $url;
     
-            $view = trim(str_replace("阅读人次：","", $crawler->filter('.comicInfo .info .ib')->eq(5)->text()));
+            echo "\n查看：".$view = trim($crawler->filter('.comic_info .left .info .line1 i')->text());
     
-            $collect = trim(str_replace("收藏数：","", $crawler->filter('.comicInfo .info .ib')->eq(4)->text()));
+            echo "\n收藏：".$collect = trim($crawler->filter('.comic_info .left .info .btn_wrap #bookrack i')->text());
 
-            $category = trim(str_replace("类  别：","", $crawler->filter('.comicInfo .info .ib')->eq(7)->text()));
+            echo "\n类别：".$category = trim($crawler->filter('.comic_info .left .info .line1 span')->eq(0)->text());
 
-            $intro = trim($crawler->filter('.comicInfo .content')->text());
-
-            //插入数据
-            $cartoon = new Cartoon;
-            $cartoon->cartoon_id = self::$cartoon_id;
-            $cartoon->user_id = $user_id;
-            $cartoon->area_id = $area_id;
-            $cartoon->title = trim($title);
-            $cartoon->letter = trim($letter);
-            $cartoon->image = $image;
-            $cartoon->status = trim($status);
-            $cartoon->energy = trim($energy);
-            $cartoon->author = trim($author);
-            $cartoon->source = trim($source);
-            $cartoon->view = trim($view);
-            $cartoon->collect = trim($collect);
-            $cartoon->is_recommend = 1;
-            $cartoon->is_publish = 0;
-            $cartoon->intro = $intro;
-            $cartoon->save();
+            echo "\n描述：".$intro = trim($crawler->filter('.comic_info .left .info #words')->text());
+die;
+            // //插入数据
+            // $cartoon = new Cartoon;
+            // $cartoon->cartoon_id = self::$cartoon_id;
+            // $cartoon->user_id = $user_id;
+            // $cartoon->area_id = $area_id;
+            // $cartoon->title = trim($title);
+            // $cartoon->letter = trim($letter);
+            // $cartoon->image = $image;
+            // $cartoon->status = trim($status);
+            // $cartoon->energy = trim($energy);
+            // $cartoon->author = trim($author);
+            // $cartoon->source = trim($source);
+            // $cartoon->view = trim($view);
+            // $cartoon->collect = trim($collect);
+            // $cartoon->is_recommend = 1;
+            // $cartoon->is_publish = 0;
+            // $cartoon->intro = $intro;
+            // $cartoon->save();
 
             $cartoon = Cartoon::where('cartoon_id', '=', self::$cartoon_id)->first();
             self::$_cartoon_id = $cartoon['id'];
@@ -143,28 +153,28 @@ class YaoqiController extends Controller
 
         }
 
-        //章节获取 1:话  2:卷  3:番外
-        for($n=0 ; $n<3 ; $n++)
-        {
-            $catalogCount = $crawler->filter('#chapterlistload .list')->eq($n)->filter('.ib')->count();
+        //章节获取 1:话  2:卷  3:番外  //这个站的数据只有话
+        // for($n=0 ; $n<3 ; $n++)
+        // {
+            $catalogCount = $crawler->filter('#chapterlist_box #chapter li')->count();
            
             for($i=$catalogCount ; $i>0 ; $i--)
             {
-                $item = $crawler->filter('#chapterlistload .list')->eq($n)->filter('.ib')->eq($i-1);
+                $item = $crawler->filter('#chapterlist_box #chapter li')->eq($i)->filter('a');
     
-                $cid = str_replace("/","", str_replace("m","", $item->attr('href')));
-                
+                $href = $item->attr('href');
+
                 $title = $item->text();
     
                 //查找数据库是否存在
-                $catalog_id = self::getCartoonsCatalog($cid, $n+1, $title);
+                $catalog_id = self::getCartoonsCatalog($href, $title);
                 
                 //处理状态完成
                 CartoonsCatalog::where('catalog_id', '=', $catalog_id)->update(['state'=>2]);
     
                 echo date("Y-m-d H:i:s").": \tOne chapter is complete\n";
             }
-        }
+        //}
 
         echo date("Y-m-d H:i:s").": \tA cartoon finished\n";
 
@@ -216,9 +226,9 @@ class YaoqiController extends Controller
     }
 
     //获取章节图片
-    public static function getCartoonsCatalog($cid, $type, $title)
+    public static function getCartoonsCatalog($href, $title)
     {   
-        $href = self::$domain . "/m".$cid."/";
+        $href = explode(" ",$title);
 
         $titleArr = explode(" ",$title);
 
