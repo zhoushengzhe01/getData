@@ -34,11 +34,13 @@ class ManbenController extends Controller
 
     public static function getBookData()
     {   
+        date_default_timezone_set('PRC');
+        
+        $pageindex = 53;
+
         start:
 
         $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (中国标准时间)';
-
-        $pageindex = 73;
 
         $url = self::$domain . "/mh-updated/pagerdata.ashx?t=8&pageindex=".$pageindex."&sc=1&d=".$standard_time;
         
@@ -58,8 +60,8 @@ class ManbenController extends Controller
 
             sleep(2);
         }
-        //$pageindex--;
-        //goto start;
+        $pageindex--;
+        goto start;
     }
 
     //获得详细信息数据
@@ -353,7 +355,7 @@ class ManbenController extends Controller
         else
         {
             //获取图片
-            for($i=$imageCount ; $i>0 ; $i--)
+            for($i=0; $i<=$imageCount; $i++)
             {
                 $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (CST)';
 
