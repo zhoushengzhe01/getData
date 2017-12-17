@@ -36,10 +36,10 @@ class ManbenController extends Controller
     {   
         date_default_timezone_set('PRC');
         
-        $pageindex = 53;
+        $pageindex = 90;
 
         start:
-
+        
         $standard_time = date("D M d Y H:i:s ").'GMT'.date("O").' (中国标准时间)';
 
         $url = self::$domain . "/mh-updated/pagerdata.ashx?t=8&pageindex=".$pageindex."&sc=1&d=".$standard_time;

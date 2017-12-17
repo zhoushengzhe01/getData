@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         'App\Console\Commands\Manben',
         'App\Console\Commands\Tenxun',
         'App\Console\Commands\Yaoqi',
+        'App\Console\Commands\Xiaoshuo',
     ];
 
     /**

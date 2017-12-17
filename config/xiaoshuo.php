@@ -1,0 +1,37 @@
+<?php
+return [
+    //笔趣阁采集
+    'biqudu_com'=>[
+
+        'domain' => 'http://www.biqiuge.com',
+        
+        'imagePath' => 'download/xs/',
+
+        'url' => '/book/{start}/',
+
+        //小说页
+        'fiction' => [
+            //采集规则
+
+            'title' => ['item', '#maininfo #info h1>0>text'],
+
+            'author' => ['item', '#maininfo #info p>0>text'],
+
+            'intro' => ['item', '#maininfo #intro>0>text'],
+
+            'image' => ['item', '#fmimg img>0>src'],
+
+            'category' => ['item', '.con_top>0>text'],
+
+            'cataloglist' => ['list', '#list dd', 'a>0>href'],
+        ],
+
+        'fictionCatalog' => [
+            
+            'title'=> ['item', '.bookname h1>0>text'],
+
+            'content'=> ['item', '#content>0>html']
+        ],
+
+    ]
+];
