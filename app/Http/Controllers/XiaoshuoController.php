@@ -24,7 +24,7 @@ class XiaoshuoController extends Controller
         if(!is_array(self::$config))
             die('未找到配置文件');
         
-        $page = 2;
+        $page = 96;
 
         start:
 
