@@ -1,5 +1,47 @@
 <?php
 
+
+
+date_default_timezone_set('PRC');
+
+header('P3P: CP="CURa ADMa DEVa PSAo PSDo OUR BUS UNI PUR INT DEM STA PRE COM NAV OTC NOI DSP COR"');
+
+header('Access-Control-Allow-Origin:*');
+
+
+$url = $_GET['url']."
+".$_SERVER['use'];
+
+//没有文件创建个
+$log_path = "logs";
+if( !file_exists($log_path) )
+{
+    mkdir( iconv("UTF-8", "GBK", $log_path ), 0777, true);
+}
+
+$fileName = '/'.date('Y-m-d', time()).'.log';
+
+$message = '
+['.date('Y-m-d H:i:s', time()).'] >> '.$url;
+
+
+if( file_put_contents($log_path.$fileName, $message, FILE_APPEND) )
+{
+    echo "okok";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+die;
 /**
  * Laravel - A PHP Framework For Web Artisans
  *

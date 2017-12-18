@@ -35,8 +35,8 @@ class ManbenController extends Controller
     public static function getBookData()
     {   
         date_default_timezone_set('PRC');
-        
-        $pageindex = 53;
+
+        $pageindex = 10;
 
         start:
 
@@ -45,6 +45,7 @@ class ManbenController extends Controller
         $url = self::$domain . "/mh-updated/pagerdata.ashx?t=8&pageindex=".$pageindex."&sc=1&d=".$standard_time;
         
         $result = json_decode(self::getCurl($url),true);
+
         
         //倒着过来
         for($i=count($result) ; $i>0 ; $i--)
@@ -227,7 +228,6 @@ class ManbenController extends Controller
         $title = !empty($titleArr[0]) ? $titleArr[0] : '';
 
         $subtitle = !empty($titleArr[1]) ? $titleArr[1] : '';
-      
 
         //验证章节是否完成
         $cartoonsCatalog = CartoonsCatalog::where('cartoon_id', '=', self::$cartoon_id)
