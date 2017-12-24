@@ -12,7 +12,6 @@ return [
         //小说页
         'fiction' => [
             //采集规则
-
             'title' => ['item', '#maininfo #info h1>0>text'],
 
             'author' => ['item', '#maininfo #info p>0>text'],
@@ -26,6 +25,7 @@ return [
             'cataloglist' => ['list', '#list dd', 'a>0>href'],
         ],
 
+        //阅读页面
         'fictionCatalog' => [
             
             'title'=> ['item', '.bookname h1>0>text'],
@@ -33,5 +33,7 @@ return [
             'content'=> ['item', '#content>0>html']
         ],
 
+        'category' =>['玄幻小说','修真小说','都市小说','穿越小说','网游小说','科幻小说'],
+        
     ]
 ];
